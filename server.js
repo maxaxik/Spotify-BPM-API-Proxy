@@ -1,6 +1,5 @@
 const http = require('http')
 const axios = require('axios')
-const request = require('request');
 
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -20,10 +19,16 @@ const server = http.createServer( async (req, res) => {
 		res.end('Error: Missing q parameter');
 		return;
 	}
-
-	let songInfo = await fetchSongInfo(query);
-	responseMsg = formatSongInfo(songInfo);
-	res.end(responseMsg);
+	try {
+		throw err;
+		let songInfo = await fetchSongInfo(query);
+		responseMsg = formatSongInfo(songInfo);
+		res.end(responseMsg);
+	} catch (err) {
+		res.statusCode = 500;
+		console.log(err);
+		return;
+	}
 });
 
 server.listen(port, () => {
@@ -33,9 +38,8 @@ server.listen(port, () => {
 
 function formatSongInfo(songInfo) {
 	let returnString = "";
-	// console.log(songInfo);
 	songInfo.forEach(song => {
-		returnstring += `${song.name}\n${song.bpm}\n`
+		returnString += `${song.name}\n${song.bpm}\n`
 	});
 	return returnString;
 }
@@ -51,11 +55,11 @@ async function fetchSongInfo(query) {
 	// https://developer.spotify.com/documentation/web-api/reference/#/operations/search
 	// [ {id:"", name:"", bpm:42},{id:"", name:"", bpm:42},... ]
 	// Map( id:{name:"", bpm:42},id:{name:"", bpm:42},... )
-	let songList = [];
-	// let songMap = new Map();
+	// let songList = [];
+	let songMap = new Map();
 	songs.tracks.items
-		.forEach(song => songList.append({id: song.id, name: song.name}));
-		// .forEach(song => songMap.set(song.id, {name: song.name}));
+		// .forEach(song => songList.push({id: song.id, name: song.name}));
+		.forEach(song => songMap.set(song.id, {name: song.name}));
 	
 	// Format the id list for Audio Features search
 	// https://developer.spotify.com/documentation/web-api/reference/#/operations/get-several-audio-features
@@ -64,14 +68,13 @@ async function fetchSongInfo(query) {
 		.map(song => song.id)
 		.join(',');
 
-	let songFeatures = await getSongFeatures(IDstring);
+	let songFeatures = await getSongFeatures(IDstring, token);
 	// Combine info from Audio Features search into the song map
 	songFeatures.audio_features.forEach(song => {
-		let thatOne = songList.find(({id}) => id === song.id);
-		thatOne.bpm = song.tempo;
-		// songMap.set(song.id, {})
-		// songMap.get(song.id).set(song.id, {name: song.name, bpm: song.tempo })
+		const existingSong = songMap.get(song.id);
+		existingSong.bpm = song.tempo;
+		existingSong.time_signature = song.time_signature;
 	});
 
-	return songList;
+	return songMap;
 }
