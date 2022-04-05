@@ -8,6 +8,8 @@ const port = process.env.PORT || 3000; //1025 - 65535
 const { getSpotifyToken, getSongs, getSongFeatures } = require('./spotifyConnect')
 
 const server = http.createServer( async (req, res) => {
+	let time = new Date().toISOString();
+	console.log(`New request at [${time}]`);
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'text/plain');
 	
@@ -16,16 +18,18 @@ const server = http.createServer( async (req, res) => {
 	if (!query) {
 		// we don't like the input
 		res.statusCode = 400;
+		console.log(`Request was missing q parameter, rejected`);
 		res.end('Error: Missing q parameter');
 		return;
 	}
 	try {
-		throw err;
 		let songInfo = await fetchSongInfo(query);
 		responseMsg = formatSongInfo(songInfo);
+		console.log(`Request successful`);
 		res.end(responseMsg);
 	} catch (err) {
 		res.statusCode = 500;
+		console.log(`Request failed`);
 		console.log(err);
 		return;
 	}
