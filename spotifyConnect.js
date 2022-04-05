@@ -31,6 +31,7 @@ module.exports = {
 		const res = await axios.get('https://api.spotify.com/v1/search', {
 			params: {
 				type: 'track',
+				limit: 5,
 				q: query
 			},
 			headers: {
