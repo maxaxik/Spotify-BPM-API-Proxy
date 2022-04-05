@@ -9,7 +9,7 @@ const { getSpotifyToken, getSongs, getSongFeatures } = require('./spotifyConnect
 
 const server = http.createServer( async (req, res) => {
 	let time = new Date().toISOString();
-	console.log(`New request at [${time}]`);
+	console.log(`New request at [${time}]: ${req.url}`);
 	res.statusCode = 200;
 	res.setHeader('Content-Type', 'text/plain');
 	
@@ -43,7 +43,8 @@ server.listen(port, () => {
 function formatSongInfo(songInfo) {
 	let returnString = "";
 	songInfo.forEach(song => {
-		returnString += `${song.name}\n${song.bpm}\n`
+		returnString += `${song.artist} - ${song.name}\n`
+		returnString += `bpm:${song.bpm},time_signature:${song.time_signature},danceability:${song.danceability}\n`
 	});
 	return returnString;
 }
@@ -57,13 +58,10 @@ async function fetchSongInfo(query) {
 	
 	// Format the search results to keep track of which song is which
 	// https://developer.spotify.com/documentation/web-api/reference/#/operations/search
-	// [ {id:"", name:"", bpm:42},{id:"", name:"", bpm:42},... ]
 	// Map( id:{name:"", bpm:42},id:{name:"", bpm:42},... )
-	// let songList = [];
 	let songMap = new Map();
 	songs.tracks.items
-		// .forEach(song => songList.push({id: song.id, name: song.name}));
-		.forEach(song => songMap.set(song.id, {name: song.name}));
+		.forEach(song => songMap.set(song.id, {name: song.name, artist: song.artists[0].name}));
 	
 	// Format the id list for Audio Features search
 	// https://developer.spotify.com/documentation/web-api/reference/#/operations/get-several-audio-features
@@ -78,6 +76,7 @@ async function fetchSongInfo(query) {
 		const existingSong = songMap.get(song.id);
 		existingSong.bpm = song.tempo;
 		existingSong.time_signature = song.time_signature;
+		existingSong.danceability = song.danceability;
 	});
 
 	return songMap;
