@@ -31,6 +31,7 @@ const server = http.createServer( async (req, res) => {
 		res.statusCode = 500;
 		console.log(`Request failed`);
 		console.log(err);
+		res.end(`Request failed`);
 		return;
 	}
 });
