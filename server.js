@@ -24,9 +24,16 @@ const server = http.createServer( async (req, res) => {
 	}
 	try {
 		let songInfo = await fetchSongInfo(query);
+		if (!songInfo) {
+			res.statusCode = 404;
+			console.log(`Search returned no results`);
+			res.end(`Search returned no results`);
+			return;
+		}
 		responseMsg = formatSongInfo(songInfo);
 		console.log(`Request successful`);
 		res.end(responseMsg);
+		return;
 	} catch (err) {
 		res.statusCode = 500;
 		console.log(`Request failed`);
@@ -57,8 +64,8 @@ async function fetchSongInfo(query) {
 	// query Spotify with the string to find the appropriate song
 	let songs = await getSongs(query, token);
 	
-	// return a message if we didn't get any results
-	if (!songs) return "No results found!"; 
+	// return if we didn't get any results
+	if (songs.tracks.total == 0) return; 
 
 	// Format the search results to keep track of which song is which
 	// https://developer.spotify.com/documentation/web-api/reference/#/operations/search
