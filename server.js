@@ -57,6 +57,9 @@ async function fetchSongInfo(query) {
 	// query Spotify with the string to find the appropriate song
 	let songs = await getSongs(query, token);
 	
+	// return a message if we didn't get any results
+	if (!songs) return "No results found!"; 
+
 	// Format the search results to keep track of which song is which
 	// https://developer.spotify.com/documentation/web-api/reference/#/operations/search
 	// Map( id:{name:"", bpm:42},id:{name:"", bpm:42},... )
