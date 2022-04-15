@@ -61,6 +61,9 @@ async function fetchSongInfo(query) {
 	// get a Bearer token from Spotify, reuse the one we have if we do
 	token = await getSpotifyToken(client_id, client_secret);
 
+	// get rid of stuff in parentheses and brackets, as that seems to mess up the search
+	query = query.replace(/(\[(.*?)\])|(\((.*?)\))/g, '');
+
 	// query Spotify with the string to find the appropriate song
 	let songs = await getSongs(query, token);
 	
